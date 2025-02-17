@@ -29,15 +29,27 @@ var states = map[string]*MyState{
 		Id:     "state#3",
 		Values: []int{7, 8, 9},
 	},
+	"state#4": {
+		Id:     "state#4",
+		Values: []int{10, 11, 12},
+	},
+	"state#5": {
+		Id:     "state#5",
+		Values: []int{13, 14, 15},
+	},
+	"state#6": {
+		Id:     "state#6",
+		Values: []int{16, 17, 18},
+	},
 }
 
 func main() {
-	println("basic_cache_1 started:")
+	println("cache started")
 	if err := run(); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
-	println("basic_cache_1 exited")
+	println("cache exited")
 }
 
 func run() error {
@@ -49,19 +61,21 @@ func run() error {
 
 	backoff := 10 * time.Second
 	for _, state := range states {
-		cache.Set(state, backoff)
-		backoff += time.Second * 10
+		err := cache.Set(state, backoff)
+		if err != nil {
+			log.Printf("cache set error: %s", err)
+		}
+		backoff = backoff * 2
 	}
 
 	// WaitGroup to manage goroutines
 	var wg sync.WaitGroup
 	wg.Add(1)
 
-	// startCleanup a goroutine that waits for shutdown
+	// a goroutine that waits for shutdown
 	go func() {
 		defer wg.Done()
 		<-ctx.Done() // Wait for cancellation
-		cache.Shutdown()
 		log.Print("exiting...")
 	}()
 
@@ -72,6 +86,7 @@ func run() error {
 	// Wait for a signal
 	<-sigChan
 	log.Print("SIGTERM received, shutting down...")
+	cache.Shutdown()
 	cancel() // Trigger ctx cancellation
 
 	wg.Wait() // Ensure all goroutines complete before exiting
