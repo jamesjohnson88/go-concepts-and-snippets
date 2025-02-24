@@ -77,8 +77,7 @@ func receiveOnly(inbound <-chan string) {
 }
 
 func run() error {
-	// using a buffer purely to remove the requirement of goroutines,
-	// thus, reducing the example's complexity and lines of code
+	// using a buffer purely to remove the requirement of goroutines
 	channel := make(chan string, 3)
 	channel <- "hi!"
 
